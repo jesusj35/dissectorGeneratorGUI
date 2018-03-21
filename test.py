@@ -1,77 +1,110 @@
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
+from gi.repository import Gtk, Gdk, GdkPixbuf
 
-class ComboBoxWindow(Gtk.Window):
+(TARGET_ENTRY_TEXT, TARGET_ENTRY_PIXBUF) = range(2)
+(COLUMN_TEXT, COLUMN_PIXBUF) = range(2)
+
+DRAG_ACTION = Gdk.DragAction.COPY
+
+class DragDropWindow(Gtk.Window):
 
     def __init__(self):
-        Gtk.Window.__init__(self, title="ComboBox Example")
-
-        self.set_border_width(10)
-
-        name_store = Gtk.ListStore(int, str)
-        name_store.append([1, "format1"])
-        name_store.append([2, "format2"])
-        name_store.append([3, "format3"])
-        name_store.append([4, "format4"])
-        name_store.append([5, "format5"])
+        Gtk.Window.__init__(self, title="Drag and Drop Demo")
 
         vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-
-        name_combo = Gtk.ComboBox.new_with_model_and_entry(name_store)
-        name_combo.connect("changed", self.on_name_combo_changed)
-        name_combo.set_entry_text_column(1)
-        vbox.pack_start(name_combo, False, False, 0)
-
-        country_store = Gtk.ListStore(str)
-        countries = ["Austria", "Brazil", "Belgium", "France", "Germany",
-            "Switzerland", "United Kingdom", "United States of America",
-            "Uruguay"]
-        for country in countries:
-            country_store.append([country])
-
-        country_combo = Gtk.ComboBox.new_with_model(country_store)
-        country_combo.connect("changed", self.on_country_combo_changed)
-        renderer_text = Gtk.CellRendererText()
-        country_combo.pack_start(renderer_text, True)
-        country_combo.add_attribute(renderer_text, "text", 0)
-        vbox.pack_start(country_combo, False, False, True)
-
-        currencies = ["Euro", "US Dollars", "British Pound", "Japanese Yen",
-            "Russian Ruble", "Mexican peso", "Swiss franc"]
-        currency_combo = Gtk.ComboBoxText()
-        currency_combo.set_entry_text_column(0)
-        currency_combo.connect("changed", self.on_currency_combo_changed)
-        for currency in currencies:
-            currency_combo.append_text(currency)
-
-        vbox.pack_start(currency_combo, False, False, 0)
-
         self.add(vbox)
 
-    def on_name_combo_changed(self, combo):
-        tree_iter = combo.get_active_iter()
-        if tree_iter is not None:
-            model = combo.get_model()
-            row_id, name = model[tree_iter][:2]
-            print("Selected: ID=%d, name=%s" % (row_id, name))
-        else:
-            entry = combo.get_child()
-            print("Entered: %s" % entry.get_text())
+        hbox = Gtk.Box(spacing=12)
+        vbox.pack_start(hbox, True, True, 0)
 
-    def on_country_combo_changed(self, combo):
-        tree_iter = combo.get_active_iter()
-        if tree_iter is not None:
-            model = combo.get_model()
-            country = model[tree_iter][0]
-            print("Selected: country=%s" % country)
+        self.iconview = DragSourceIconView()
+        self.drop_area = DropArea()
 
-    def on_currency_combo_changed(self, combo):
-        text = combo.get_active_text()
-        if text is not None:
-            print("Selected: currency=%s" % text)
+        hbox.pack_start(self.iconview, True, True, 0)
+        hbox.pack_start(self.drop_area, True, True, 0)
 
-win = ComboBoxWindow()
+        button_box = Gtk.Box(spacing=6)
+        vbox.pack_start(button_box, True, False, 0)
+
+        image_button = Gtk.RadioButton.new_with_label_from_widget(None,
+            "Images")
+        image_button.connect("toggled", self.add_image_targets)
+        button_box.pack_start(image_button, True, False, 0)
+
+        text_button = Gtk.RadioButton.new_with_label_from_widget(image_button,
+            "Text")
+        text_button.connect("toggled", self.add_text_targets)
+        button_box.pack_start(text_button, True, False, 0)
+
+        self.add_image_targets()
+
+    def add_image_targets(self, button=None):
+        targets = Gtk.TargetList.new([])
+        targets.add_image_targets(TARGET_ENTRY_PIXBUF, True)
+
+        self.drop_area.drag_dest_set_target_list(targets)
+        self.iconview.drag_source_set_target_list(targets)
+
+    def add_text_targets(self, button=None):
+        self.drop_area.drag_dest_set_target_list(None)
+        self.iconview.drag_source_set_target_list(None)
+
+        self.drop_area.drag_dest_add_text_targets()
+        self.iconview.drag_source_add_text_targets()
+
+class DragSourceIconView(Gtk.IconView):
+
+    def __init__(self):
+        Gtk.IconView.__init__(self)
+        self.set_text_column(COLUMN_TEXT)
+        self.set_pixbuf_column(COLUMN_PIXBUF)
+
+        model = Gtk.ListStore(str, GdkPixbuf.Pixbuf)
+        self.set_model(model)
+        self.add_item("Item 1", "image-missing") 
+
+        self.enable_model_drag_source(Gdk.ModifierType.BUTTON1_MASK, [],
+            DRAG_ACTION)
+        self.connect("drag-data-get", self.on_drag_data_get)
+
+    def on_drag_data_get(self, widget, drag_context, data, info, time):
+        selected_path = self.get_selected_items()[0]
+        selected_iter = self.get_model().get_iter(selected_path)
+
+        if info == TARGET_ENTRY_TEXT:
+            text = self.get_model().get_value(selected_iter, COLUMN_TEXT)
+            data.set_text(text, -1)
+        elif info == TARGET_ENTRY_PIXBUF:
+            pixbuf = self.get_model().get_value(selected_iter, COLUMN_PIXBUF)
+            data.set_pixbuf(pixbuf)
+
+    def add_item(self, text, icon_name):
+        pixbuf = Gtk.IconTheme.get_default().load_icon(icon_name, 16, 0)
+        self.get_model().append([text, pixbuf])
+
+class DropArea(Gtk.Label):
+
+    def __init__(self):
+        Gtk.Label.__init__(self, "Drop something on me!")
+        self.drag_dest_set(Gtk.DestDefaults.ALL, [], DRAG_ACTION)
+
+        self.connect("drag-data-received", self.on_drag_data_received)
+
+    def on_drag_data_received(self, widget, drag_context, x,y, data,info, time):
+        if info == TARGET_ENTRY_TEXT:
+            text = data.get_text()
+            print("Received text: %s" % text)
+
+        elif info == TARGET_ENTRY_PIXBUF:
+            pixbuf = data.get_pixbuf()
+            width = pixbuf.get_width()
+            height = pixbuf.get_height()
+
+            print("Received pixbuf with width %spx and height %spx" % (width,
+                height))
+
+win = DragDropWindow()
 win.connect("delete-event", Gtk.main_quit)
 win.show_all()
 Gtk.main()

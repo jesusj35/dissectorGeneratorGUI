@@ -43,9 +43,6 @@ class Wlauncher(Gtk.Window):
         self.cancel.connect("clicked", self.cancel_clicked)
         botBox.pack_start(self.cancel, True, True, 10)
 
-    def browse_clicked(self,widget):
-        print("Browse")
-
     def launch_clicked(self,widget):
         print("Launch")
         self.destroy()
@@ -53,5 +50,22 @@ class Wlauncher(Gtk.Window):
     def cancel_clicked(self,widget):
         print("Cancel")
         self.destroy()
+    
+    def browse_clicked(self, widget):
+        dialog = Gtk.FileChooserDialog("Please choose a folder", self,
+            Gtk.FileChooserAction.SELECT_FOLDER,
+            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+             "Select", Gtk.ResponseType.OK))
+        dialog.set_default_size(800, 400)
+
+        response = dialog.run()
+        if response == Gtk.ResponseType.OK:
+            print("Select clicked")
+            print("Folder selected: " + dialog.get_filename())
+        elif response == Gtk.ResponseType.CANCEL:
+            print("Cancel clicked")
+
+        dialog.destroy()
+
         
 

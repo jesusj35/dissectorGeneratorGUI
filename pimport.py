@@ -48,6 +48,20 @@ class Pimport(Gtk.Window):
 
     def browse_clicked(self,widget):
         print("Browse")
+        dialog = Gtk.FileChooserDialog("Please choose a folder", self,
+            Gtk.FileChooserAction.SELECT_FOLDER,
+            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+             "Select", Gtk.ResponseType.OK))
+        dialog.set_default_size(800, 400)
+
+        response = dialog.run()
+        if response == Gtk.ResponseType.OK:
+            print("Select clicked")
+            print("Folder selected: " + dialog.get_filename())
+        elif response == Gtk.ResponseType.CANCEL:
+            print("Cancel clicked")
+
+        dialog.destroy()
 
     def projectIm_clicked(self,widget):
         print("Launch")
