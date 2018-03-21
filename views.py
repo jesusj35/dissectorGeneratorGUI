@@ -156,7 +156,8 @@ class Views(Gtk.Window):
 
         #Buttons 
         restoreButton = Gtk.Button.new_with_label("Restore to Default")
-        restoreButton.connect("clicked", self.restore_clicked)
+        restoreButton.connect("clicked", self.restore_clicked, projectShow, buildShow, paletteShow, packetStreamShow,
+        dissectedStreamShow, rawShow, consoleShow)
         botBox.pack_start(restoreButton, False, False, 5)
 
         confirmButton = Gtk.Button.new_with_label("Confirm")
@@ -217,8 +218,16 @@ class Views(Gtk.Window):
             state = "off"
         print("Button", name, "was turned", state) 
     
-    def restore_clicked(self,widget):
+    def restore_clicked(self,button, projectShow, buildShow, paletteShow, packetStreamShow,
+        dissectedStreamShow, rawShow, consoleShow):
         print("Browse")
+        projectShow.set_active(True)
+        buildShow.set_active(True)
+        paletteShow.set_active(True)
+        packetStreamShow.set_active(True)
+        dissectedStreamShow.set_active(True)
+        rawShow.set_active(True)
+        consoleShow.set_active(True)
 
     def confirm_clicked(self,widget):
         print("Confirm")

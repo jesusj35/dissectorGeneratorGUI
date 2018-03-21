@@ -7,6 +7,7 @@ import dissectorScript
 import pimport
 import export
 import views 
+import pcap
 
 class MyWindow(Gtk.Window):
 
@@ -15,7 +16,6 @@ class MyWindow(Gtk.Window):
 
         self.box = Gtk.Box(spacing=10)
         self.add(self.box)
-
 
         self.button1 = Gtk.Button(label="Create Project")
         self.button1.connect("clicked", self.on_button1_clicked)
@@ -104,6 +104,10 @@ class MyWindow(Gtk.Window):
 
     def on_button9_clicked(self,widget):
         print("Opening")
+        win = pcap.Pcap()
+        win.connect("destroy", Gtk.main_quit)
+        win.show_all()
+        Gtk.main()
         
 
 win = MyWindow()
