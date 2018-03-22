@@ -19,7 +19,7 @@ class DragDropWindow(Gtk.Window):
         constructs2 = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         constructs3 = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         constructs4 = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-        dropArea = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=300)
+        dropArea = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
 
 
         hbox.pack_start(dropArea, True, True, 5)

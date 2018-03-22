@@ -32,26 +32,17 @@ class DragDropWindow(Gtk.Window):
         image_button.connect("toggled", self.add_image_targets)
         button_box.pack_start(image_button, True, False, 0)
 
-        text_button = Gtk.RadioButton.new_with_label_from_widget(image_button,
-            "Text")
-        text_button.connect("toggled", self.add_text_targets)
-        button_box.pack_start(text_button, True, False, 0)
-
         self.add_image_targets()
 
     def add_image_targets(self, button=None):
+        button = Gtk.Button.new_with_label("Hello") 
         targets = Gtk.TargetList.new([])
-        targets.add_image_targets(TARGET_ENTRY_PIXBUF, True)
+        targets.add_image_targets(Gdk.ModifierType.BUTTON1_MASK, True)
 
         self.drop_area.drag_dest_set_target_list(targets)
         self.iconview.drag_source_set_target_list(targets)
 
-    def add_text_targets(self, button=None):
-        self.drop_area.drag_dest_set_target_list(None)
-        self.iconview.drag_source_set_target_list(None)
 
-        self.drop_area.drag_dest_add_text_targets()
-        self.iconview.drag_source_add_text_targets()
 
 class DragSourceIconView(Gtk.IconView):
 
@@ -62,7 +53,9 @@ class DragSourceIconView(Gtk.IconView):
 
         model = Gtk.ListStore(str, GdkPixbuf.Pixbuf)
         self.set_model(model)
-        self.add_item("Item 1", "image-missing") 
+        self.add_item("Item 1", "image-missing")
+        
+        
 
         self.enable_model_drag_source(Gdk.ModifierType.BUTTON1_MASK, [],
             DRAG_ACTION)
@@ -82,6 +75,7 @@ class DragSourceIconView(Gtk.IconView):
     def add_item(self, text, icon_name):
         pixbuf = Gtk.IconTheme.get_default().load_icon(icon_name, 16, 0)
         self.get_model().append([text, pixbuf])
+
 
 class DropArea(Gtk.Label):
 
